@@ -1,0 +1,15 @@
+[package]
+name = "owt-authorization"
+version = "0.1.0"
+authors = ["Liming SHAO <lmshao@163.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.7"
+hex = "0.4"
+chrono = "0.4"
+hmac = "0.7"
+sha2 = "0.8.1"
+base64 = "0.12"
