@@ -3,7 +3,7 @@ use chrono::prelude::*;
 use hmac::{Hmac, Mac};
 use std::fs::File;
 use std::io::Read;
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 
 
 #[derive(Debug, Clone, Deserialize)]
@@ -14,7 +14,8 @@ struct SampleService {
 
 #[derive(Debug, Clone, Deserialize)]
 struct Conf {
-    sampleService: SampleService
+    #[serde(rename = "sampleService")]
+    sample_service: SampleService
 }
 
 fn main() {
@@ -25,7 +26,7 @@ fn main() {
 
     let mut file = match File::open(config) {
         Ok(f) => f,
-        Err(e) => panic!("Failed to open config: {}", config)
+        Err(e) => panic!("Failed to open config: {} {}", config, e)
     };
 
     let mut str_val = String::new();
@@ -35,8 +36,8 @@ fn main() {
     };
 
     let conf: Conf =  toml::from_str(&str_val).expect("Failded to parse toml");
-    let sample_service_id = conf.sampleService.id;
-    let sample_service_key = conf.sampleService.key;
+    let sample_service_id = conf.sample_service.id;
+    let sample_service_key = conf.sample_service.key;
 
     println!("sampleServiceId: {}", sample_service_id);
     println!("sampleServiceKey: {}", sample_service_key);
