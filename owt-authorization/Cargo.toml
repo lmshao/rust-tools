@@ -13,3 +13,5 @@ chrono = "0.4"
 hmac = "0.7"
 sha2 = "0.8.1"
 base64 = "0.12"
+serde = { version = "*", features = ["derive"] }
+toml = "*"

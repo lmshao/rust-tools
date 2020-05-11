@@ -1,13 +1,47 @@
 use rand::prelude::*;
 use chrono::prelude::*;
 use hmac::{Hmac, Mac};
+use std::fs::File;
+use std::io::Read;
+use serde::{Serialize, Deserialize};
+
+
+#[derive(Debug, Clone, Deserialize)]
+struct SampleService {
+    id: String,
+    key: String
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct Conf {
+    sampleService: SampleService
+}
 
 fn main() {
     println!("OWT Authorization");
     println!("------------------");
 
-    let sample_service_id = "5e72ca9eda3a9a154d25e6b3";
-    let sample_service_key = "mW7r59SHlVo5VtK+ZZpqY+SAkf1U3YeuZwQbIT2yNcvPpi15tAKjEehl2TZPteSmK4wx90NRgvFZKyMcML8TgIGVKcWhz/cGtAj/C4L190lPTqjT+G5IH2QMJxL/ojyB0PWS1gzhxaBl49wMgDfrKy/dZoz2XEHfJqQKUJYzBME=";
+    let config = "owt-authorization.toml";
+
+    let mut file = match File::open(config) {
+        Ok(f) => f,
+        Err(e) => panic!("Failed to open config: {}", config)
+    };
+
+    let mut str_val = String::new();
+    match file.read_to_string(&mut str_val) {
+        Ok(s) => s,
+        Err(e) => panic!("Failed to read file: {}", e)
+    };
+
+    let conf: Conf =  toml::from_str(&str_val).expect("Failded to parse toml");
+    let sample_service_id = conf.sampleService.id;
+    let sample_service_key = conf.sampleService.key;
+
+    println!("sampleServiceId: {}", sample_service_id);
+    println!("sampleServiceKey: {}", sample_service_key);
+    println!("------------------");
+
     let random_data: Vec<u8>= rand::thread_rng().sample_iter(rand::distributions::Standard).take(8).collect();
     let cnounce = hex::encode(&random_data);
     let timestamp = Local::now().timestamp_millis().to_string();
@@ -19,18 +53,18 @@ fn main() {
 
     let mut header = String::from("MAuth realm=http://marte3.dit.upm.es,mauth_signature_method=HMAC_SHA256");
     header += ",mauth_serviceid=";
-    header += sample_service_id;
+    header += &sample_service_id;
     header += ",mauth_cnonce=";
     header += &cnounce;
     header += ",mauth_timestamp=";
     header += &timestamp;
     header += ",mauth_signature=";
-    header += calculate_signature(&to_sign, sample_service_key).as_ref();
+    header += calculate_signature(&to_sign, &sample_service_key).as_ref();
 
     println!("Authorization:\n{}\n", header);
 }
 
-fn calculate_signature(to_sign: &String, key: &str) -> String{
+fn calculate_signature(to_sign: &String, key: &String) -> String{
     type HmacSha256 = Hmac<sha2::Sha256>;
     let mut mac = HmacSha256::new_varkey(key.as_ref()).expect("wtf");
     mac.input(to_sign.as_ref());
